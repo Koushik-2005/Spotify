@@ -22,6 +22,20 @@ db.serialize(() => {
       time_stamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Create user_interactions table for logging user activities
+  db.run(`
+    CREATE TABLE IF NOT EXISTS user_interactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      page TEXT,
+      metadata TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  console.log("✅ Database tables initialized");
 });
 
 module.exports = {

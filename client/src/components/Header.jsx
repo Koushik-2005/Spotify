@@ -1,17 +1,36 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaMusic, FaChartLine } from "react-icons/fa";
+import { FaMusic, FaChartLine, FaUser, FaBars } from "react-icons/fa";
+import useAnalytics from "../hooks/useAnalytics";
 
 export default function Header() {
   const location = useLocation();
+  const { logInteraction } = useAnalytics();
+
+  useEffect(() => {
+    // Log page visit
+    logInteraction("page_visit", location.pathname);
+  }, [location.pathname, logInteraction]);
+
+  const handleNavClick = (page) => {
+    logInteraction("navigation_click", page);
+  };
+
+  const handleSignInClick = () => {
+    logInteraction("sign_in_click", "header");
+  };
 
   return (
     <header className="backdrop-blur-xl bg-black/20 border-b border-white/10 sticky top-0 z-50">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="p-3 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl shadow-lg group-hover:shadow-purple-500/50 transition-all duration-300 transform group-hover:scale-105">
+          <Link
+            to="/"
+            className="flex items-center gap-3 group"
+            onClick={() => handleNavClick("home")}
+          >
+            <div className="p-3 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl shadow-lg group-hover:shadow-purple-500/50 transition-all duration-300 transform group-hover:scale-105 group-hover:rotate-3">
               <FaMusic className="text-2xl text-white" />
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
@@ -20,33 +39,57 @@ export default function Header() {
           </Link>
 
           {/* Navigation */}
-          <nav className="flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-8">
             <Link
               to="/"
+              onClick={() => handleNavClick("home")}
               className={`${
-                location.pathname === '/' 
-                  ? 'text-purple-400 bg-purple-500/10' 
-                  : 'text-gray-300 hover:text-white'
-              } font-medium transition-all duration-200 px-4 py-2 rounded-lg hover:bg-white/5`}
+                location.pathname === "/"
+                  ? "text-purple-400 bg-purple-500/10 shadow-lg shadow-purple-500/20"
+                  : "text-gray-300 hover:text-white"
+              } font-medium transition-all duration-200 px-6 py-3 rounded-lg hover:bg-white/5 transform hover:scale-105 hover:shadow-lg`}
             >
-              Home
+              🏠 Home
             </Link>
             <Link
               to="/analytics"
+              onClick={() => handleNavClick("analytics")}
               className={`${
-                location.pathname === '/analytics' 
-                  ? 'text-purple-400 bg-purple-500/10' 
-                  : 'text-gray-300 hover:text-white'
-              } flex items-center gap-2 font-medium transition-all duration-200 px-4 py-2 rounded-lg hover:bg-white/5`}
+                location.pathname === "/analytics"
+                  ? "text-purple-400 bg-purple-500/10 shadow-lg shadow-purple-500/20"
+                  : "text-gray-300 hover:text-white"
+              } flex items-center gap-2 font-medium transition-all duration-200 px-6 py-3 rounded-lg hover:bg-white/5 transform hover:scale-105 hover:shadow-lg`}
             >
               <FaChartLine />
               Analytics
             </Link>
-            <button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-purple-500/30 transform hover:scale-105">
-              Sign in
-            </button>
+
+            {/* Additional Nav Items */}
+            <div className="flex items-center gap-4 ml-4">
+              <button
+                className="text-gray-300 hover:text-white transition-all duration-200 p-3 rounded-lg hover:bg-white/5 transform hover:scale-105"
+                onClick={() => logInteraction("profile_click", "header")}
+              >
+                <FaUser className="text-lg" />
+              </button>
+
+              <button
+                onClick={handleSignInClick}
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-purple-500/30 transform hover:scale-105 hover:-translate-y-1"
+              >
+                Sign in
+              </button>
+            </div>
           </nav>
+
+          {/* Mobile Menu Button */}
+          <button className="md:hidden text-white p-3 rounded-lg hover:bg-white/10 transition-all duration-200">
+            <FaBars className="text-xl" />
+          </button>
         </div>
+
+        {/* Status Indicator */}
+        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full opacity-75"></div>
       </div>
     </header>
   );

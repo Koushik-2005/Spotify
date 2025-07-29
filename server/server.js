@@ -1,10 +1,10 @@
-require('dotenv').config();
+require("dotenv").config();
 
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const db = require('./db/database');
-const verifyToken = require('./middleware/authMiddleware');
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const db = require("./db/database");
+const verifyToken = require("./middleware/authMiddleware");
 
 const app = express();
 
@@ -13,31 +13,33 @@ app.use(cors());
 app.use(express.json());
 
 // View engine (for server-rendered analytics page)
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
 // --------------------- Routes ---------------------
-const journalRoutes = require('./routes/journalRoutes');
-const playlistRoutes = require('./routes/playlistRoutes');
-const authRoutes = require('./routes/authRoutes');
+const journalRoutes = require("./routes/journalRoutes");
+const playlistRoutes = require("./routes/playlistRoutes");
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
 
-app.use('/api', journalRoutes);
-app.use('/api', playlistRoutes);
-app.use('/api', authRoutes);
+app.use("/api", journalRoutes);
+app.use("/api", playlistRoutes);
+app.use("/api", authRoutes);
+app.use("/api", userRoutes);
 
 // --------------------- Analytics Route (EJS) ---------------------
-app.get('/analytics', verifyToken, async (req, res) => {
-  const filter = req.query.range || 'all';
+app.get("/analytics", verifyToken, async (req, res) => {
+  const filter = req.query.range || "all";
   const userId = req.user.id;
 
-  let dateCondition = '';
+  let dateCondition = "";
   const params = [userId];
 
-  if (filter === 'today') {
+  if (filter === "today") {
     dateCondition = `AND date(time_stamp) = date('now')`;
-  } else if (filter === 'week') {
+  } else if (filter === "week") {
     dateCondition = `AND time_stamp >= datetime('now', '-7 days')`;
-  } else if (filter === 'month') {
+  } else if (filter === "month") {
     dateCondition = `AND strftime('%Y-%m', time_stamp) = strftime('%Y-%m', 'now')`;
   }
 
@@ -59,7 +61,7 @@ app.get('/analytics', verifyToken, async (req, res) => {
 
     console.log("✅ Filtered analytics fetched for:", userId, filter);
 
-    res.render('analytics', {
+    res.render("analytics", {
       moods,
       goals,
       languages,
@@ -74,15 +76,15 @@ app.get('/analytics', verifyToken, async (req, res) => {
 // --------------------- Optional: JSON Analytics API ---------------------
 app.get("/api/analytics-json", verifyToken, async (req, res) => {
   const userId = req.user.id;
-  const filter = req.query.range || 'all';
-  let dateCondition = '';
+  const filter = req.query.range || "all";
+  let dateCondition = "";
   const params = [userId];
 
-  if (filter === 'today') {
+  if (filter === "today") {
     dateCondition = `AND date(time_stamp) = date('now')`;
-  } else if (filter === 'week') {
+  } else if (filter === "week") {
     dateCondition = `AND time_stamp >= datetime('now', '-7 days')`;
-  } else if (filter === 'month') {
+  } else if (filter === "month") {
     dateCondition = `AND strftime('%Y-%m', time_stamp) = strftime('%Y-%m', 'now')`;
   }
 
@@ -134,7 +136,7 @@ app.get("/api/analytics-json", verifyToken, async (req, res) => {
 });
 
 // --------------------- Test Route ---------------------
-app.get('/test-db', async (req, res) => {
+app.get("/test-db", async (req, res) => {
   try {
     const rows = await db.all(
       `SELECT id, mood, goal, language, datetime(time_stamp) as time FROM mood_history ORDER BY id DESC LIMIT 5`
@@ -147,12 +149,12 @@ app.get('/test-db', async (req, res) => {
 });
 
 // --------------------- Root ---------------------
-app.get('/', (req, res) => {
-  res.send('Mind Beats backend is running 🎧');
+app.get("/", (req, res) => {
+  res.send("Mind Beats backend is running 🎧");
 });
 
 // --------------------- Start Server ---------------------
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
