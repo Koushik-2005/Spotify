@@ -1,0 +1,82 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mood Analytics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="max-w-4xl mx-auto py-8 px-4">
+    <h1 class="text-3xl font-bold mb-6">📊 Mood Analytics Dashboard</h1>
+    <form method="GET" action="/analytics" class="mb-6">
+  <label for="range" class="mr-2 font-semibold">Filter by:</label>
+  <select name="range" id="range" onchange="this.form.submit()" class="p-2 border rounded">
+    <option value="all" <%= filter === 'all' ? 'selected' : '' %>>All Time</option>
+    <option value="today" <%= filter === 'today' ? 'selected' : '' %>>Today</option>
+    <option value="week" <%= filter === 'week' ? 'selected' : '' %>>Last 7 Days</option>
+    <option value="month" <%= filter === 'month' ? 'selected' : '' %>>This Month</option>
+  </select>
+</form>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div>
+        <h2 class="text-xl font-semibold mb-2">Moods</h2>
+        <canvas id="moodChart"></canvas>
+      </div>
+
+      <div>
+        <h2 class="text-xl font-semibold mb-2">Goals</h2>
+        <canvas id="goalChart"></canvas>
+      </div>
+
+      <div>
+        <h2 class="text-xl font-semibold mb-2">Languages</h2>
+        <canvas id="languageChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const moods = <%- JSON.stringify(moods) %>;
+    const goals = <%- JSON.stringify(goals) %>;
+    const languages = <%- JSON.stringify(languages) %>;
+
+    new Chart(document.getElementById('moodChart'), {
+      type: 'bar',
+      data: {
+        labels: moods.map(m => m.mood),
+        datasets: [{
+          label: 'Mood Frequency',
+          data: moods.map(m => m.count),
+          backgroundColor: '#60a5fa',
+        }]
+      }
+    });
+
+    new Chart(document.getElementById('goalChart'), {
+      type: 'doughnut',
+      data: {
+        labels: goals.map(g => g.goal),
+        datasets: [{
+          label: 'Goal Usage',
+          data: goals.map(g => g.count),
+          backgroundColor: ['#34d399', '#f87171'],
+        }]
+      }
+    });
+
+    new Chart(document.getElementById('languageChart'), {
+      type: 'pie',
+      data: {
+        labels: languages.map(l => l.language),
+        datasets: [{
+          label: 'Languages',
+          data: languages.map(l => l.count),
+          backgroundColor: ['#fbbf24', '#38bdf8', '#a78bfa', '#fb7185', '#34d399'],
+        }]
+      }
+    });
+  </script>
+</body>
+</html> -->

@@ -4,6 +4,42 @@ const router = express.Router();
 const db = require('../db/database');
 const detectMood = require('../utils/moodDetector');
 
+// Inside routes/journalRoutes.js
+router.get('/mood-stats', (req, res) => {
+  db.all(
+    `SELECT mood, COUNT(*) as count FROM journal_entries GROUP BY mood ORDER BY count DESC`,
+    [],
+    (err, rows) => {
+      if (err) {
+        console.error('Error fetching stats:', err.message);
+        return res.status(500).json({ error: 'Stats fetch failed' });
+      }
+      res.json(rows);  // Return array like [{ mood: 'calm', count: 3 }, ...]
+    }
+  );
+});
+
+
+
+router.put('/journal/:id/playlist', async (req, res) => {
+  const { id } = req.params;
+  const { playlist } = req.body;
+
+  if (!playlist || !playlist.id || !playlist.url || !playlist.name) {
+    return res.status(400).json({ error: 'Invalid playlist data' });
+  }
+
+  try {
+    await db.run(
+      `UPDATE journal SET playlist_id = ?, playlist_url = ?, playlist_name = ?, playlist_image = ? WHERE id = ?`,
+      [playlist.id, playlist.url, playlist.name, playlist.image, id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error updating journal playlist:', err);
+    res.status(500).json({ error: 'Failed to update playlist' });
+  }
+});
 // POST /api/journal
 router.post('/journal', (req, res) => {
   const { note, mood: moodInput } = req.body;
@@ -44,23 +80,7 @@ router.get('/journal', (req, res) => {
 });
 
 // GET /api/mood-stats - get mood frequency
-router.get('/mood-stats', (req, res) => {
-  db.all(
-    `SELECT mood, COUNT(*) as count FROM journal_entries GROUP BY mood`,
-    [],
-    (err, rows) => {
-      if (err) {
-        console.error('Error fetching stats:', err.message);
-        return res.status(500).json({ error: 'Stats fetch failed' });
-      }
-      const stats = {};
-      rows.forEach((row) => {
-        stats[row.mood] = row.count;
-      });
-      res.json(stats);
-    }
-  );
-});
+
 
 // PUT /api/journal/:id/playlist - save playlist info to journal
 router.put('/journal/:id/playlist', (req, res) => {

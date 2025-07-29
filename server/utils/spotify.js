@@ -1,60 +1,157 @@
-// utils/spotify.js
-const axios = require('axios');
-require('dotenv').config();
+const axios = require("axios");
+require("dotenv").config();
+const db = require("../db/database"); // Make sure this path is correct
 
 let accessToken = null;
 
 async function getAccessToken() {
   if (accessToken) return accessToken;
 
-  const result = await axios.post(
-    'https://accounts.spotify.com/api/token',
-    new URLSearchParams({ grant_type: 'client_credentials' }),
-    {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization':
-          'Basic ' +
-          Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64'),
-      },
-    }
-  );
+  try {
+    const result = await axios.post(
+      "https://accounts.spotify.com/api/token",
+      new URLSearchParams({ grant_type: "client_credentials" }),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization:
+            "Basic " +
+            Buffer.from(
+              `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
+            ).toString("base64"),
+        },
+      }
+    );
 
-  accessToken = result.data.access_token;
-  return accessToken;
+    accessToken = result.data.access_token;
+    return accessToken;
+  } catch (err) {
+    console.error(
+      "❌ Spotify Access Token Error:",
+      err.response?.data || err.message
+    );
+    throw new Error("Failed to get access token");
+  }
 }
 
+// Mood and goal mapping
 const moodSearchMap = {
-  happy: { match: 'happy hits', recover: 'relaxing music' },
-  sad: { match: 'sad songs', recover: 'cheer up music' },
-  anxious: { match: 'lofi chill', recover: 'calming focus' },
-  calm: { match: 'peaceful piano', recover: 'uplift mood' },
+  happy: {
+    match: "happy upbeat playlist",
+    recover: "calming relaxing playlist",
+  },
+  sad: {
+    match: "sad emotional songs",
+    recover: "uplifting motivational music",
+  },
+  anxious: {
+    match: "calming ambient music",
+    recover: "happy energetic playlist",
+  },
+  angry: {
+    match: "aggressive intense music",
+    recover: "peaceful meditation music",
+  },
+  calm: {
+    match: "peaceful ambient music",
+    recover: "upbeat energetic playlist",
+  },
+  tired: {
+    match: "soft gentle music",
+    recover: "workout energetic music",
+  },
+  bored: {
+    match: "chill lofi music",
+    recover: "party dance music",
+  },
 };
 
-async function getPlaylistForMood(mood, goal = 'match') {
-  const token = await getAccessToken();
-  const searchQuery = moodSearchMap[mood]?.[goal] || mood;
+// Supported languages
+const supportedLanguages = ["hindi", "telugu", "tamil", "english", "malayalam"];
 
-  const result = await axios.get('https://api.spotify.com/v1/search', {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    params: {
-      q: searchQuery,
-      type: 'playlist',
-      limit: 1,
-    },
-  });
-
-  const playlist = result.data.playlists.items[0];
-  if (!playlist) return null;
-
-  return {
-    id: playlist.id,
-    name: playlist.name,
-    url: playlist.external_urls.spotify,
-    image: playlist.images[0]?.url,
+// Normalize unknown moods to known ones
+const normalizeMood = (mood) => {
+  const map = {
+    depressed: "sad",
+    stressed: "anxious",
+    lonely: "sad",
+    frustrated: "angry",
+    overwhelmed: "anxious",
+    burntout: "tired",
+    sleepy: "tired",
+    excited: "happy",
   };
+
+  return map[mood.toLowerCase()] || mood.toLowerCase();
+};
+
+// 📌 Log each request to database
+async function logMoodRequest(mood, goal, language, userId) {
+  try {
+    await db.run(
+      "INSERT INTO mood_history (user_id, mood, goal, language) VALUES (?, ?, ?, ?)",
+      [userId, mood.toLowerCase(), goal, language]
+    );
+  } catch (err) {
+    console.error("🛑 Error logging to DB:", err.message);
+  }
+}
+
+async function getPlaylistForMood(
+  mood,
+  goal = "match",
+  language = "english",
+  userId
+) {
+  console.log("🎯 Fetching playlist for:", { mood, goal, language, userId });
+
+  // Log the mood request
+  if (userId) {
+    await logMoodRequest(mood, goal, language, userId);
+  }
+
+  const normalizedMood = mood.toLowerCase().trim();
+  const moodMap = moodSearchMap[normalizedMood] || {
+    match: `${normalizedMood} music`,
+    recover: `opposite of ${normalizedMood} music`,
+  };
+
+  const searchQuery = `${moodMap[goal]} ${language}`;
+  console.log("🔍 Searching Spotify with:", searchQuery);
+
+  try {
+    const token = await getAccessToken(); // Use dynamic token instead of env variable
+    const response = await axios.get(`https://api.spotify.com/v1/search`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      params: {
+        q: searchQuery,
+        type: "playlist",
+        limit: 1,
+      },
+    });
+
+    const playlist = response.data.playlists?.items?.[0];
+    if (!playlist) {
+      console.warn("⚠️ No playlist found for keyword:", searchQuery);
+      return null;
+    }
+
+    return {
+      name: playlist.name,
+      url: playlist.external_urls.spotify,
+      image: playlist.images?.[0]?.url || null,
+      goal,
+      language,
+    };
+  } catch (error) {
+    console.error(
+      "❌ Spotify API Error:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to fetch playlist");
+  }
 }
 
 module.exports = getPlaylistForMood;
