@@ -4,6 +4,7 @@ import { MdOutlineMood, MdMoodBad } from "react-icons/md";
 import { BiSolidPlaylist } from "react-icons/bi";
 import { IoIosArrowDown } from "react-icons/io";
 import useAnalytics from "./hooks/useAnalytics"; // Import the analytics hook
+import { getBaseUrl } from "./utils/config";
 
 export default function PlaylistFetcher() {
   const [mood, setMood] = useState("");
@@ -43,7 +44,7 @@ export default function PlaylistFetcher() {
       const startTime = Date.now();
 
       const response = await fetch(
-        `http://localhost:3001/api/playlist/${encodeURIComponent(
+        `${getBaseUrl()}/api/playlist/${encodeURIComponent(
           mood
         )}?goal=${goal}&language=${language}&userId=${userId}`
       );

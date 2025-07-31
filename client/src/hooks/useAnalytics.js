@@ -1,7 +1,8 @@
 import { useCallback } from "react";
 import axios from "axios";
+import { getBaseUrl } from "../utils/config";
 
-const API_BASE = "http://localhost:3001/api";
+const API_BASE = `${getBaseUrl()}/api`;
 
 export const useAnalytics = () => {
   const logInteraction = useCallback(async (action, page, metadata = {}) => {

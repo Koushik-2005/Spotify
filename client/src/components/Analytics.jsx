@@ -19,6 +19,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import useAnalytics from "../hooks/useAnalytics";
+import { getBaseUrl } from "../utils/config";
 
 export default function Analytics() {
   const [analyticsData, setAnalyticsData] = useState({
@@ -45,7 +46,7 @@ export default function Analytics() {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:3001/api/analytics-json?range=${filter}`
+        `${getBaseUrl()}/api/analytics-json?range=${filter}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch analytics");

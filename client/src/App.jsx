@@ -86,7 +86,7 @@ export default function App() {
         setAppStats(stats);
 
         // Simulate loading time for better UX
-        setTimeout(() => setIsLoading(false), 1500);
+        setTimeout(() => setIsLoading(false), 100);
       } catch (error) {
         console.error("App initialization error:", error);
         setIsLoading(false);

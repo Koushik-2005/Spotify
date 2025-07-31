@@ -76,7 +76,7 @@ export default function Footer() {
             >
               Privacy Policy
             </a>
-            <span className="text-xs md:text-sm">© 2025 Mind Beats. All rights reserved.</span>
+            <span className="text-xs md:text-sm">© {new Date().getFullYear()} Mind Beats. All rights reserved.</span>
           </div>
         </div>
       </div>

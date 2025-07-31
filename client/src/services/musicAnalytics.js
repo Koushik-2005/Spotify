@@ -1,6 +1,7 @@
 import axios from "axios";
+import { getBaseUrl } from "../utils/config";
 
-const API_BASE = "http://localhost:3001/api";
+const API_BASE = `${getBaseUrl()}/api`;
 
 class MusicAnalytics {
   constructor() {
