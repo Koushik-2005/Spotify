@@ -35,6 +35,57 @@ db.serialize(() => {
     )
   `);
 
+  // Create analytics_events table for detailed music analytics
+  db.run(`
+    CREATE TABLE IF NOT EXISTS analytics_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      session_id TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      event_data TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create indexes separately
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_analytics_user_id ON analytics_events(user_id)`
+  );
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_analytics_event_type ON analytics_events(event_type)`
+  );
+  db.run(
+    `CREATE INDEX IF NOT EXISTS idx_analytics_timestamp ON analytics_events(timestamp)`
+  );
+
+  // Create user_preferences table for recommendation improvements
+  db.run(`
+    CREATE TABLE IF NOT EXISTS user_preferences (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      mood TEXT,
+      language TEXT,
+      goal TEXT,
+      play_count INTEGER DEFAULT 1,
+      last_played DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, mood, language, goal)
+    )
+  `);
+
+  // Create playlist_engagement table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS playlist_engagement (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      playlist_id TEXT,
+      playlist_name TEXT,
+      mood TEXT,
+      goal TEXT,
+      language TEXT,
+      opened_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   console.log("✅ Database tables initialized");
 });
 

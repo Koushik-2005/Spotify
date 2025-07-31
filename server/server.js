@@ -1,10 +1,7 @@
 require("dotenv").config();
-
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const db = require("./db/database");
-const verifyToken = require("./middleware/authMiddleware");
 
 const app = express();
 
@@ -20,141 +17,53 @@ app.set("views", path.join(__dirname, "views"));
 const journalRoutes = require("./routes/journalRoutes");
 const playlistRoutes = require("./routes/playlistRoutes");
 const authRoutes = require("./routes/authRoutes");
-const userRoutes = require("./routes/userRoutes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
 
 app.use("/api", journalRoutes);
 app.use("/api", playlistRoutes);
 app.use("/api", authRoutes);
-app.use("/api", userRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
-// --------------------- Analytics Route (EJS) ---------------------
-app.get("/analytics", verifyToken, async (req, res) => {
-  const filter = req.query.range || "all";
-  const userId = req.user.id;
+// Analytics dashboard route
+app.get("/analytics/:userId", (req, res) => {
+  const { userId } = req.params;
+  const timeframe = req.query.timeframe || "7";
 
-  let dateCondition = "";
-  const params = [userId];
-
-  if (filter === "today") {
-    dateCondition = `AND date(time_stamp) = date('now')`;
-  } else if (filter === "week") {
-    dateCondition = `AND time_stamp >= datetime('now', '-7 days')`;
-  } else if (filter === "month") {
-    dateCondition = `AND strftime('%Y-%m', time_stamp) = strftime('%Y-%m', 'now')`;
-  }
-
-  try {
-    const moods = await db.all(
-      `SELECT mood, COUNT(*) as count FROM mood_history WHERE user_id = ? ${dateCondition} GROUP BY mood`,
-      params
-    );
-
-    const goals = await db.all(
-      `SELECT goal, COUNT(*) as count FROM mood_history WHERE user_id = ? ${dateCondition} GROUP BY goal`,
-      params
-    );
-
-    const languages = await db.all(
-      `SELECT language, COUNT(*) as count FROM mood_history WHERE user_id = ? ${dateCondition} GROUP BY language`,
-      params
-    );
-
-    console.log("✅ Filtered analytics fetched for:", userId, filter);
-
-    res.render("analytics", {
-      moods,
-      goals,
-      languages,
-      filter,
-    });
-  } catch (err) {
-    console.error("🔥 Error loading analytics:", err);
-    res.status(500).send("Error loading analytics");
-  }
+  res.render("analytics", {
+    userId,
+    timeframe,
+    title: "Music Analytics Dashboard",
+  });
 });
 
-// --------------------- Optional: JSON Analytics API ---------------------
-app.get("/api/analytics-json", verifyToken, async (req, res) => {
-  const userId = req.user.id;
-  const filter = req.query.range || "all";
-  let dateCondition = "";
-  const params = [userId];
-
-  if (filter === "today") {
-    dateCondition = `AND date(time_stamp) = date('now')`;
-  } else if (filter === "week") {
-    dateCondition = `AND time_stamp >= datetime('now', '-7 days')`;
-  } else if (filter === "month") {
-    dateCondition = `AND strftime('%Y-%m', time_stamp) = strftime('%Y-%m', 'now')`;
-  }
-
-  try {
-    const moods = await db.all(
-      `SELECT mood, COUNT(*) as count FROM mood_history WHERE user_id = ? ${dateCondition} GROUP BY mood`,
-      params
-    );
-    const goals = await db.all(
-      `SELECT goal, COUNT(*) as count FROM mood_history WHERE user_id = ? ${dateCondition} GROUP BY goal`,
-      params
-    );
-    const languages = await db.all(
-      `SELECT language, COUNT(*) as count FROM mood_history WHERE user_id = ? ${dateCondition} GROUP BY language`,
-      params
-    );
-
-    res.json({ moods, goals, languages });
-  } catch (err) {
-    console.error("🔥 Error loading analytics:", err);
-    res.status(500).json({ error: "Failed to load analytics" });
-  }
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-app.get("/api/analytics-json", verifyToken, async (req, res) => {
-  const userId = req.user.id;
-
-  try {
-    const moods = await db.all(
-      `SELECT mood, COUNT(*) as count FROM mood_history WHERE user_id = ? GROUP BY mood`,
-      [userId]
-    );
-
-    const goals = await db.all(
-      `SELECT goal, COUNT(*) as count FROM mood_history WHERE user_id = ? GROUP BY goal`,
-      [userId]
-    );
-
-    const languages = await db.all(
-      `SELECT language, COUNT(*) as count FROM mood_history WHERE user_id = ? GROUP BY language`,
-      [userId]
-    );
-
-    res.json({ moods, goals, languages });
-  } catch (err) {
-    console.error("Error loading analytics JSON:", err);
-    res.status(500).json({ error: "Failed to load analytics data" });
-  }
+// --------------------- Error Handling ---------------------
+app.use((err, req, res, next) => {
+  console.error("Server error:", err);
+  res.status(500).json({
+    error: "Internal server error",
+    message: err.message,
+  });
 });
 
-// --------------------- Test Route ---------------------
-app.get("/test-db", async (req, res) => {
-  try {
-    const rows = await db.all(
-      `SELECT id, mood, goal, language, datetime(time_stamp) as time FROM mood_history ORDER BY id DESC LIMIT 5`
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ DB test error:", err.message);
-    res.status(500).send("DB error");
-  }
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
 });
 
-// --------------------- Root ---------------------
-app.get("/", (req, res) => {
-  res.send("Mind Beats backend is running 🎧");
-});
-
-// --------------------- Start Server ---------------------
+// --------------------- Server Start ---------------------
 const PORT = process.env.PORT || 3001;
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🎵 Moodify server running on port ${PORT}`);
+  console.log(
+    `📊 Analytics dashboard: http://localhost:${PORT}/analytics/user123`
+  );
+  console.log(`🏥 Health check: http://localhost:${PORT}/health`);
 });
+
+module.exports = app;

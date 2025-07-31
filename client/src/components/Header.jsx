@@ -16,10 +16,6 @@ export default function Header() {
     logInteraction("navigation_click", page);
   };
 
-  const handleSignInClick = () => {
-    logInteraction("sign_in_click", "header");
-  };
-
   return (
     <header className="backdrop-blur-xl bg-black/20 border-b border-white/10 sticky top-0 z-50">
       <div className="container mx-auto px-6 py-4">
@@ -71,13 +67,6 @@ export default function Header() {
                 onClick={() => logInteraction("profile_click", "header")}
               >
                 <FaUser className="text-lg" />
-              </button>
-
-              <button
-                onClick={handleSignInClick}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-purple-500/30 transform hover:scale-105 hover:-translate-y-1"
-              >
-                Sign in
               </button>
             </div>
           </nav>

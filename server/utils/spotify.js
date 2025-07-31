@@ -86,14 +86,37 @@ const normalizeMood = (mood) => {
 };
 
 // 📌 Log each request to database
+// Enhanced logging function
 async function logMoodRequest(mood, goal, language, userId) {
   try {
+    // Log to mood_history table (existing)
     await db.run(
       "INSERT INTO mood_history (user_id, mood, goal, language) VALUES (?, ?, ?, ?)",
       [userId, mood.toLowerCase(), goal, language]
     );
+
+    // Also log to analytics_events table for detailed tracking
+    await db.run(
+      `INSERT INTO analytics_events 
+       (user_id, session_id, event_type, event_data, timestamp)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        userId,
+        `session_${Date.now()}`, // Simple session ID
+        "playlist_request",
+        JSON.stringify({
+          mood: mood.toLowerCase(),
+          goal,
+          language,
+          timestamp: new Date().toISOString(),
+        }),
+        new Date().toISOString(),
+      ]
+    );
+
+    console.log(`📊 Analytics logged: ${mood} playlist request for ${userId}`);
   } catch (err) {
-    console.error("🛑 Error logging to DB:", err.message);
+    console.error("🛑 Error logging analytics:", err.message);
   }
 }
 
