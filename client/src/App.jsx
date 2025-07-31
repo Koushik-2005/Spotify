@@ -162,14 +162,7 @@ export default function App() {
                               Mood Playlist
                             </h2>
                           </div>
-                          <p
-                            className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-8 animate-fade-in"
-                            style={{ animationDelay: "0.4s" }}
-                          >
-                            Discover music that matches your emotions and helps
-                            you feel better. Our AI-powered system curates
-                            playlists based on your current mood.
-                          </p>
+                         
 
                           {/* App Stats Display */}
                           {appStats && (
