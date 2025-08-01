@@ -1,19 +1,20 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaMusic, FaChartLine, FaUser, FaBars } from "react-icons/fa";
+import { FaMusic, FaChartLine, FaUser, FaBars, FaTimes } from "react-icons/fa";
 import useAnalytics from "../hooks/useAnalytics";
 
 export default function Header() {
   const location = useLocation();
   const { logInteraction } = useAnalytics();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Log page visit
     logInteraction("page_visit", location.pathname);
   }, [location.pathname, logInteraction]);
 
   const handleNavClick = (page) => {
     logInteraction("navigation_click", page);
+    setMenuOpen(false); // Close menu on navigation
   };
 
   return (
@@ -34,7 +35,7 @@ export default function Header() {
             </h1>
           </Link>
 
-          {/* Navigation */}
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
             <Link
               to="/"
@@ -59,23 +60,51 @@ export default function Header() {
               <FaChartLine />
               Analytics
             </Link>
-
-            {/* Additional Nav Items */}
-            <div className="flex items-center gap-4 ml-4">
-              <button
-                className="text-gray-300 hover:text-white transition-all duration-200 p-3 rounded-lg hover:bg-white/5 transform hover:scale-105"
-                onClick={() => logInteraction("profile_click", "header")}
-              >
-                <FaUser className="text-lg" />
-              </button>
-            </div>
+            <button
+              className="text-gray-300 hover:text-white transition-all duration-200 p-3 rounded-lg hover:bg-white/5 transform hover:scale-105"
+              onClick={() => logInteraction("profile_click", "header")}
+            >
+              <FaUser className="text-lg" />
+            </button>
           </nav>
 
           {/* Mobile Menu Button */}
-          <button className="md:hidden text-white p-3 rounded-lg hover:bg-white/10 transition-all duration-200">
-            <FaBars className="text-xl" />
+          <button
+            className="md:hidden text-white p-3 rounded-lg hover:bg-white/10 transition-all duration-200"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
           </button>
         </div>
+
+        {/* Mobile Dropdown */}
+        {menuOpen && (
+          <div className="md:hidden mt-4 space-y-2 animate-fade-in">
+            <Link
+              to="/"
+              onClick={() => handleNavClick("home")}
+              className="block text-white bg-white/10 px-4 py-2 rounded-lg"
+            >
+              🏠 Home
+            </Link>
+            <Link
+              to="/analytics"
+              onClick={() => handleNavClick("analytics")}
+              className="block text-white bg-white/10 px-4 py-2 rounded-lg"
+            >
+              📊 Analytics
+            </Link>
+            {/* <button
+              onClick={() => {
+                logInteraction("profile_click", "header");
+                setMenuOpen(false);
+              }}
+              className="block w-full text-left text-white bg-white/10 px-4 py-2 rounded-lg"
+            >
+              👤 Profile
+            </button> */}
+          </div>
+        )}
 
         {/* Status Indicator */}
         <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full opacity-75"></div>
